@@ -1,119 +1,92 @@
-[Indeed Job Scraper](https://apify.com/pramodkonde17/indeed-job-scraper?fpr=data)
+[Indeed Job Scraper](https://apify.com/nexgendata/indeed-job-scraper?fpr=data)
 
-# Indeed Job Scraper — Apify Actor
+> Extract job listings from Indeed — titles, salaries, company info, locations & descriptions. Build job boards, salary research tools & labor market analysis. Pay per listing.
 
-Scrape job listings from [Indeed.com](https://indeed.com) based on job roles, location, and other filters. Returns structured job data ready for analysis or export.
+## 🔑 Features
 
-## Features
+- Runs in the Apify cloud — no local setup, no maintenance
+- Structured JSON output ready for analytics, CRMs, or databases
+- Batch-friendly — process many inputs in one run
+- Integrates with Zapier, Make.com, n8n, Google Sheets, Slack, and direct API calls
+- Pay-per-use pricing — no subscription, no monthly minimum
 
-- Search multiple job roles in a single run
-- Filter by location (city, state, remote)
-- Filter by date posted, job type (full-time, part-time, contract, etc.)
-- Filter by remote-only positions
-- Optional minimum salary filter
-- Scrapes full job descriptions from individual job pages
-- Returns benefits, requirements, company rating, and hiring insights
-- Pagination support to collect up to 500 jobs per role
-- Proxy support (Apify Residential recommended)
+## 💼 Common Use Cases
 
-## Input
+- Market research and competitive intelligence
+- Data enrichment and lead generation
+- Content monitoring and automated alerts
+- Pipeline and integration workflows
+- Dashboards and reporting
 
-| Field | Type | Description | Default |
-| --- | --- | --- | --- |
-| `jobRoles` | Array | List of job titles to search (required) | `["Software Engineer"]` |
-| `location` | String | Location (city, state, or "Remote") | `"United States"` |
-| `maxJobsPerRole` | Integer | Max results per role (1–500) | `50` |
-| `datePostedFilter` | String | Recency filter: 1, 3, 7, 14 days | Any time |
-| `jobType` | String | fulltime / parttime / contract / temporary / internship | All |
-| `remoteOnly` | Boolean | Only return remote jobs | `false` |
-| `salaryMin` | Integer | Minimum annual salary | — |
-| `includeDescription` | Boolean | Fetch full description per job | `true` |
-| `proxyConfiguration` | Object | Apify proxy settings | Residential |
+---
 
-### Example Input
+ 
+
+## 💻 Code Example — Python
 
 ```
-{
-    "jobRoles": ["Data Scientist", "Machine Learning Engineer", "AI Engineer"],
-    "location": "San Francisco, CA",
-    "maxJobsPerRole": 100,
-    "datePostedFilter": "7",
-    "jobType": "fulltime",
-    "remoteOnly": false,
-    "includeDescription": true,
-    "proxyConfiguration": {
-        "useApifyProxy": true,
-        "apifyProxyGroups": ["RESIDENTIAL"]
-    }
-}
+from apify_client import ApifyClient
+
+client = ApifyClient("YOUR_APIFY_TOKEN")
+run = client.actor("nexgendata/indeed-job-scraper").call(run_input={
+    # Fill in the input shape from the actor's input_schema
+})
+
+for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+    print(item)
 ```
 
-## Output
-
-Each item in the dataset contains:
-
-| Field | Description |
-| --- | --- |
-| `jobId` | Unique Indeed job ID |
-| `jobTitle` | Job title |
-| `company` | Company name |
-| `location` | Job location |
-| `salary` | Salary range (if listed) |
-| `jobType` | Full-time, part-time, etc. |
-| `datePosted` | When the job was posted |
-| `summary` | Short summary from listing card |
-| `description` | Full job description text |
-| `descriptionHtml` | Full description as HTML |
-| `benefits` | Listed benefits |
-| `requirements` | Key requirements |
-| `companyRating` | Indeed company rating |
-| `companyReviewCount` | Number of company reviews |
-| `hiringInsights` | Hiring pace or insights |
-| `url` | Direct link to the job posting |
-| `searchRole` | Which job role was searched |
-| `scrapedAt` | Timestamp of when it was scraped |
-
-### Example Output
+## 🌐 Code Example — cURL
 
 ```
-{
-    "jobId": "abc123def456",
-    "jobTitle": "Senior Data Scientist",
-    "company": "Acme Corp",
-    "location": "San Francisco, CA",
-    "salary": "$150,000 - $180,000 a year",
-    "jobType": "Full-time",
-    "datePosted": "2 days ago",
-    "summary": "We are looking for a passionate Data Scientist...",
-    "description": "About the role: We are looking for a passionate...",
-    "benefits": ["Health insurance", "401(k)", "Remote work"],
-    "companyRating": 4.2,
-    "companyReviewCount": "312 reviews",
-    "url": "https://www.indeed.com/viewjob?jk=abc123def456",
-    "searchRole": "Data Scientist",
-    "scrapedAt": "2024-01-15T10:30:00.000Z"
-}
+curl -X POST "https://api.apify.com/v2/acts/nexgendata~indeed-job-scraper/run-sync-get-dataset-items?token=YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ /* input schema */ }'
 ```
 
-## Notes
+## ❓ FAQ
 
-- **Proxy usage**: Apify Residential proxies are strongly recommended. Indeed actively blocks datacenter IPs.
-- **Rate of requests**: The actor uses `maxConcurrency: 5` to avoid triggering anti-bot measures.
-- **Indeed's structure**: Indeed frequently updates its HTML structure. If results are empty, the selectors may need updating.
-- **Legal**: Always check Indeed's Terms of Service before using this actor commercially. This actor is intended for research and personal use.
+**Q: How do I get started?**
+Sign up at [apify.com](https://www.apify.com/?fpr=2ayu9b), grab your API token from Settings → Integrations, and run the actor via the Apify console, API, Python SDK, or any integration (Zapier, Make.com, n8n).
 
-## Deployment
+**Q: What's the typical cost per run?**
+See the pricing section below. Most runs finish under $0.10 for typical batches.
 
-1. Clone or push this directory to Apify Console
-2. Go to **Actors → Create new Actor**
-3. Connect your GitHub repo or upload the files
-4. Set your input in the **Input** tab
-5. Run the actor
+**Q: Is this actor maintained?**
+Yes. NexGenData maintains 165+ Apify actors and ships updates regularly. Bug reports via the Apify console issues tab get responses within 24 hours.
 
-Or use the Apify CLI:
+**Q: Can I use the output commercially?**
+Yes — you own the output data. Check the target site's Terms of Service for any usage restrictions on the scraped content itself.
 
-```
-apify login
-apify push
-apify run
-```
+**Q: How do I handle rate limits?**
+Apify manages concurrency and retries automatically. For very large batches (10K+ items), run multiple smaller jobs in parallel instead of one mega-job for better reliability.
+
+## 💰 Pricing
+
+Pay-per-event pricing — you only pay for what you actually extract.
+
+- **Actor Start:** $0.0001
+- **result:** $0.0050
+
+## 🔗 Related NexGenData Actors
+
+- [LinkedIn Jobs Scraper](https://apify.com/nexgendata/linkedin-jobs-scraper?fpr=2ayu9b)
+- [HN Who's Hiring Scraper](https://apify.com/nexgendata/hn-whos-hiring-scraper?fpr=2ayu9b)
+
+## 🚀 Apify Affiliate Program
+
+New to Apify? Sign up with our [referral link](https://www.apify.com/?fpr=2ayu9b) — you get free platform credits on signup, and you help fund the maintenance of this actor fleet.
+
+## 📚 More From NexGenData
+
+Explore the full catalog, tutorials, Gumroad data packs, and newsletter at **[thenextgennexus.com](https://thenextgennexus.com)** — the brand home for everything we ship.
+
+- 📖 Tutorials & how-to guides
+- 🗂️ Full actor catalog with usage examples
+- 📦 Gumroad data packs (one-time purchases)
+- 📬 Newsletter — monthly drops of new actors and revenue experiments
+
+---
+
+*Built and maintained by [NexGenData](https://apify.com/nexgendata?fpr=2ayu9b) — 165+ actors covering scraping, enrichment, MCP servers, and automation.*
+🏠 Home: [thenextgennexus.com](https://thenextgennexus.com)
