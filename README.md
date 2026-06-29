@@ -1,101 +1,119 @@
-[Indeed Job Scraper](https://apify.com/bradmccloskey/indeed-job-scraper?fpr=data)
+[Indeed Job Scraper](https://apify.com/pramodkonde17/indeed-job-scraper?fpr=data)
 
-Scrape job listings from Indeed at scale. Search by keyword, location, and filter for remote positions. Get structured job data including salary ranges, company names, descriptions, and posting dates for recruitment, market research, and job market analysis.
+# Indeed Job Scraper — Apify Actor
 
-## Why use this scraper?
-
-- **Recruitment automation**: Build candidate sourcing pipelines by tracking job market demand
-- **Salary benchmarking**: Collect salary data across roles, locations, and industries
-- **Job market analysis**: Track hiring trends, in-demand skills, and emerging roles
-- **Competitive hiring intelligence**: Monitor what your competitors are hiring for
-- **Career research**: Analyze job requirements and qualifications at scale
+Scrape job listings from [Indeed.com](https://indeed.com) based on job roles, location, and other filters. Returns structured job data ready for analysis or export.
 
 ## Features
 
-- **Keyword search**: Search any job title, skill, company, or keyword
-- **Location filtering**: Target specific cities, states, or zip codes
-- **Remote filter**: Return only remote/work-from-home positions
-- **Salary extraction**: Capture salary ranges when listed by employers
-- **Anti-detection**: Built-in browser stealth to avoid blocks
-- **Proxy support**: Works with Apify proxy or your own residential proxies
+- Search multiple job roles in a single run
+- Filter by location (city, state, remote)
+- Filter by date posted, job type (full-time, part-time, contract, etc.)
+- Filter by remote-only positions
+- Optional minimum salary filter
+- Scrapes full job descriptions from individual job pages
+- Returns benefits, requirements, company rating, and hiring insights
+- Pagination support to collect up to 500 jobs per role
+- Proxy support (Apify Residential recommended)
 
-## What data you get
+## Input
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `job_id` | string | Unique job identifier |
-| `source` | string | `indeed` |
-| `title` | string | Job title |
-| `company` | string | Company name |
-| `location` | string | Job location (city, state, zip) |
-| `salary` | string | Salary range (e.g., "$120,000 - $160,000 a year") |
-| `job_type` | string | Full-time, Part-time, Contract, etc. |
-| `description` | string | Job description snippet |
-| `requirements` | array | Listed requirements and qualifications |
-| `posted_date` | string | When the job was posted (e.g., "3 days ago") |
-| `url` | string | Direct job listing URL |
-| `is_remote` | boolean | Whether the position is remote |
+| Field | Type | Description | Default |
+| --- | --- | --- | --- |
+| `jobRoles` | Array | List of job titles to search (required) | `["Software Engineer"]` |
+| `location` | String | Location (city, state, or "Remote") | `"United States"` |
+| `maxJobsPerRole` | Integer | Max results per role (1–500) | `50` |
+| `datePostedFilter` | String | Recency filter: 1, 3, 7, 14 days | Any time |
+| `jobType` | String | fulltime / parttime / contract / temporary / internship | All |
+| `remoteOnly` | Boolean | Only return remote jobs | `false` |
+| `salaryMin` | Integer | Minimum annual salary | — |
+| `includeDescription` | Boolean | Fetch full description per job | `true` |
+| `proxyConfiguration` | Object | Apify proxy settings | Residential |
 
-## Input example
+### Example Input
 
 ```
 {
-    "searchQueries": ["data engineer", "python developer", "devops engineer"],
+    "jobRoles": ["Data Scientist", "Machine Learning Engineer", "AI Engineer"],
     "location": "San Francisco, CA",
+    "maxJobsPerRole": 100,
+    "datePostedFilter": "7",
+    "jobType": "fulltime",
     "remoteOnly": false,
-    "maxResultsPerQuery": 50
+    "includeDescription": true,
+    "proxyConfiguration": {
+        "useApifyProxy": true,
+        "apifyProxyGroups": ["RESIDENTIAL"]
+    }
 }
 ```
 
-## Output example
+## Output
+
+Each item in the dataset contains:
+
+| Field | Description |
+| --- | --- |
+| `jobId` | Unique Indeed job ID |
+| `jobTitle` | Job title |
+| `company` | Company name |
+| `location` | Job location |
+| `salary` | Salary range (if listed) |
+| `jobType` | Full-time, part-time, etc. |
+| `datePosted` | When the job was posted |
+| `summary` | Short summary from listing card |
+| `description` | Full job description text |
+| `descriptionHtml` | Full description as HTML |
+| `benefits` | Listed benefits |
+| `requirements` | Key requirements |
+| `companyRating` | Indeed company rating |
+| `companyReviewCount` | Number of company reviews |
+| `hiringInsights` | Hiring pace or insights |
+| `url` | Direct link to the job posting |
+| `searchRole` | Which job role was searched |
+| `scrapedAt` | Timestamp of when it was scraped |
+
+### Example Output
 
 ```
 {
-    "job_id": "indeed_a1b2c3d4e5",
-    "source": "indeed",
-    "title": "Senior Data Engineer",
-    "company": "Stripe",
-    "location": "San Francisco, CA 94103",
-    "salary": "$180,000 - $250,000 a year",
-    "job_type": "Full-time",
-    "description": "We're looking for an experienced Data Engineer to design, build, and maintain data pipelines that power Stripe's analytics and machine learning platforms...",
-    "requirements": ["Python", "SQL", "Apache Spark", "AWS/GCP", "Data modeling"],
-    "posted_date": "2 days ago",
-    "url": "https://www.indeed.com/viewjob?jk=a1b2c3d4e5",
-    "is_remote": false
+    "jobId": "abc123def456",
+    "jobTitle": "Senior Data Scientist",
+    "company": "Acme Corp",
+    "location": "San Francisco, CA",
+    "salary": "$150,000 - $180,000 a year",
+    "jobType": "Full-time",
+    "datePosted": "2 days ago",
+    "summary": "We are looking for a passionate Data Scientist...",
+    "description": "About the role: We are looking for a passionate...",
+    "benefits": ["Health insurance", "401(k)", "Remote work"],
+    "companyRating": 4.2,
+    "companyReviewCount": "312 reviews",
+    "url": "https://www.indeed.com/viewjob?jk=abc123def456",
+    "searchRole": "Data Scientist",
+    "scrapedAt": "2024-01-15T10:30:00.000Z"
 }
 ```
 
-## Use cases
+## Notes
 
-### Salary benchmarking reports
+- **Proxy usage**: Apify Residential proxies are strongly recommended. Indeed actively blocks datacenter IPs.
+- **Rate of requests**: The actor uses `maxConcurrency: 5` to avoid triggering anti-bot measures.
+- **Indeed's structure**: Indeed frequently updates its HTML structure. If results are empty, the selectors may need updating.
+- **Legal**: Always check Indeed's Terms of Service before using this actor commercially. This actor is intended for research and personal use.
 
-Search for a role across multiple cities. Compare salary ranges by location to build compensation benchmarks for HR teams.
+## Deployment
 
-### Job market trend analysis
+1. Clone or push this directory to Apify Console
+2. Go to **Actors → Create new Actor**
+3. Connect your GitHub repo or upload the files
+4. Set your input in the **Input** tab
+5. Run the actor
 
-Run weekly scrapes for trending tech skills (AI/ML, Rust, Kubernetes). Track how demand shifts over time for recruiting agencies and workforce planning.
+Or use the Apify CLI:
 
-### Competitive hiring intelligence
-
-Monitor job postings from specific companies. Identify when competitors are ramping up hiring in a new area or technology.
-
-### Lead generation for recruiters
-
-Build lists of companies actively hiring. Cross-reference with LinkedIn and CRM data for recruiter outreach.
-
-## Tips for best results
-
-- **Combine keywords**: "python developer" finds more results than just "python"
-- **Use `remoteOnly: true`** to filter for remote-only positions
-- **Multi-city runs**: Search across multiple locations in one run for broader coverage
-- **Schedule daily runs** to catch new listings before they expire
-- **Use Apify proxy** for best reliability on large runs
-
-## Pricing
-
-**$3.00 per 1,000 results** (pay-per-result). Platform fees included.
-
-## Integrations
-
-Export results to Google Sheets, Airtable, Slack, Zapier, Make, or webhooks using Apify's built-in integrations. Download as JSON, CSV, or Excel.
+```
+apify login
+apify push
+apify run
+```
